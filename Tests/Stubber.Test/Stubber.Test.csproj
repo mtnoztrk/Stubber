@@ -4,6 +4,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <AssemblyName>Stubber.Test</AssemblyName>
+
+    <RootNamespace>Stubber.Test</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +18,6 @@
     <PackageReference Include="Xunit.DependencyInjection" Version="7.0.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="coverlet.collector" Version="1.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Metime\Metime.csproj" />
   </ItemGroup>
 
 </Project>
