@@ -48,7 +48,6 @@ namespace StubberProject
             foreach (var item in SnippetValues)
             {
                 sb.AppendLine(item.Value.GetSnippet());
-                sb.AppendLine();
             }
             using (var stream = new FileStream(GetCodeFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {

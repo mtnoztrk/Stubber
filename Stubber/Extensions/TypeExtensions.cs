@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace StubberProject.Extensions
 {
@@ -21,6 +24,22 @@ namespace StubberProject.Extensions
         public static bool IsList(this Type type)
         {
             return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        public static IEnumerable<InterfaceMapping> GetAllInterfaceMaps(this Type aType)
+        {
+            return aType.GetTypeInfo()
+                .ImplementedInterfaces
+                .Select(ii => aType.GetInterfaceMap(ii));
+        }
+
+        public static Type[] GetInterfacesForMethod(this MethodInfo mi)
+        {
+            return mi.ReflectedType
+                .GetAllInterfaceMaps()
+                .Where(im => im.TargetMethods.Any(tm => tm == mi))
+                .Select(im => im.InterfaceType)
+                .ToArray();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.CSharp;
+using StubberProject.Extensions;
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -17,6 +18,7 @@ namespace StubberProject.Models
         public string ReturnSignature { get; }
         private string MethodName { get; }
         private string MethodNameIndexed { get; }
+        private string InterfaceName { get; }
 
         public StubSnippet(MethodBase methodBase, int index)
         {
@@ -26,17 +28,19 @@ namespace StubberProject.Models
             MethodParameters = GenerateMethodParameters(methodBase);
             OutParameterDefinitions = GenerateOutParameterDefinitions(methodBase);
             ReturnSignature = GeneateReturnSignature(methodBase);
+            InterfaceName = (methodBase as MethodInfo).GetInterfacesForMethod().FirstOrDefault()?.Name; 
         }
 
-        public string GetSnippet()
+        public string GetSnippet() //TODO: comment out code for some edge cases. (like default constructor not found for json)
         {
+            if (string.IsNullOrEmpty(InterfaceName)) return null; // if there is no interface found, this can't be stubbed!
             var lineTabs = "\t";
             var methodTabs = "\t\t";
             var paramTabs = "\t\t\t";
             var outLines =  $"{lineTabs}{string.Join(";" + Environment.NewLine + lineTabs, OutParameterDefinitions)}";
             var methodSignature =  $"{Environment.NewLine}{paramTabs}{string.Join("," + Environment.NewLine + paramTabs, MethodParameters)}";
             return $"{outLines}" +
-                $"{Environment.NewLine}{lineTabs}_discountServiceMock" + //TODO: burayı fixle
+                $"{Environment.NewLine}{lineTabs}_{InterfaceName}Mock" + //TODO: burayı fixle
                 $"{Environment.NewLine}{methodTabs}.Setup(c => c.{MethodName}({methodSignature}))" +
                 $"{Environment.NewLine}{methodTabs}.Returns({ReturnSignature});";
         }
