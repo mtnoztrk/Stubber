@@ -84,14 +84,18 @@ namespace StubberProject.Attributes
         private static void BeforeExecution(MethodBase methodMetadata, object[] args, int index)
         {
             var manager = ServiceLocator.GetService<IStubberManager>();
+            if (!manager.IsRecording) // don't save anything if recording is not enabled
+                return;
             var arguments = manager.ProcessArguments(methodMetadata, args);
             manager.AddToStubValues($"{methodMetadata.Name}___{index}", arguments);
-            manager.AddToMethodSignatures($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
+            manager.AddToSnippetValues($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
         }
 
         private static void AfterExecution(MethodBase methodMetadata, object[] args, object result, int index)
         {
             var manager = ServiceLocator.GetService<IStubberManager>();
+            if (!manager.IsRecording) // don't save anything if recording is not enabled
+                return;
             var localResults = manager.ProcessResult(methodMetadata, args, result);
             manager.AddToStubValues($"{methodMetadata.Name}___{index}", localResults);
         }

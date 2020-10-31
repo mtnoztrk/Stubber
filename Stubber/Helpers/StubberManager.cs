@@ -17,7 +17,7 @@ namespace StubberProject.Helpers
         void StartRecording(string methodUnderTest);
         void StopRecording();
         void AddToStubValues(string methodName, Dictionary<string, object> localResults);
-        void AddToMethodSignatures(string methodName, StubSnippet snippet);
+        void AddToSnippetValues(string methodName, StubSnippet snippet);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ namespace StubberProject.Helpers
             }
         }
 
-        public void AddToMethodSignatures(string methodName, StubSnippet snippet)
+        public void AddToSnippetValues(string methodName, StubSnippet snippet)
         {
             _snippetValues.Add(methodName, snippet);
         }

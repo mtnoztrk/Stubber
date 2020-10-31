@@ -7,6 +7,6 @@ namespace StubberProject
     public interface IOutputter
     {
         Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> StubValues);
-        Task OutputSnippets(string outputName, Dictionary<string, StubSnippet> MethodSignatures);
+        Task OutputSnippets(string outputName, Dictionary<string, StubSnippet> SnippetValues);
     }
 }
