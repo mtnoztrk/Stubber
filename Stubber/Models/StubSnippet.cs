@@ -10,7 +10,7 @@ using System.Text;
 
 namespace StubberProject.Models
 {
-    internal class StubSnippet
+    public class StubSnippet
     {
         public IEnumerable<string> MethodParameters { get; }
         public IEnumerable<string> OutParameterDefinitions { get; }

@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace StubberProject.Helpers
 {
-    public class SourceObject
+    public class SourceObject //TODO: factory
     {
         private JObject stubs;
         public SourceObject(string filePath)

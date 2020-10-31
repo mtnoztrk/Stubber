@@ -1,15 +1,8 @@
-﻿using AgileObjects.ReadableExpressions;
-using AspectInjector.Broker;
-using Newtonsoft.Json;
+﻿using AspectInjector.Broker;
 using StubberProject.Helpers;
 using StubberProject.Models;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace StubberProject.Attributes
@@ -88,105 +81,21 @@ namespace StubberProject.Attributes
             return result;
         }
 
-        private static string StubFileName = "STUB_SOURCE.json";
-        private static string CodeFileName = "CODE.txt";
-
-        private static Dictionary<string, Dictionary<string, object>> StubValues = new Dictionary<string, Dictionary<string, object>>();
-        private static Dictionary<string, StubSnippet> MethodSignatures = new Dictionary<string, StubSnippet>();
-
-        private static void AddToStubValues(string methodName, Dictionary<string, object> localResults)
-        {
-            if (StubValues.ContainsKey(methodName))
-            {
-                // might throw eksepsiyon :(
-                var combinedDictionary = StubValues[methodName].Union(localResults).ToDictionary(k => k.Key, v => v.Value);
-                StubValues[methodName] = combinedDictionary;
-            }
-            else
-            {
-                StubValues.Add(methodName, localResults);
-            }
-        }
-
         private static void ProcessArguments(MethodBase methodMetadata, object[] args, int index) // input parameters
         {
-            var arguments = new Dictionary<string, object>();
-            var methodParameters = methodMetadata.GetParameters();
-            for (int i = 0; i < methodParameters.Length; i++)
-            {
-                if (!methodParameters[i].IsOut) // out parameters should be saved after method call ended
-                {
-                    var temp = args[i];
-                    if (temp is Expression exp)
-                    {
-                        temp = exp.ToReadableString();
-                    }
-                    else if (temp == null)
-                    {
-                        // nothing needed
-                    }
-                    else if (temp.GetType().IsFunc())
-                    {
-                        temp = "funcMethod"; //TODO: ??
-                    }
-                    arguments.Add($"in_{methodParameters[i].Name}", temp);
-                }
-            }
-            AddToStubValues($"{methodMetadata.Name}___{index}", arguments);
-            MethodSignatures.Add($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
+            var outputManager = ServiceLocator.GetService<IOutputManager>();
+            var arguments = outputManager.ProcessArguments(methodMetadata, args);
+            outputManager.AddToStubValues($"{methodMetadata.Name}___{index}", arguments);
+            outputManager.AddToMethodSignatures($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
         }
 
         private static void ProcessResult(MethodBase methodMetadata, object[] args, object result, int index) // output
         {
-            //TODO: can split till end region to interface
-            var localResults = new Dictionary<string, object>();
-            localResults.Add("out", result);
-
-            #region outParameters
-            var methodParameters = methodMetadata.GetParameters();
-            if (methodParameters.Any(c => c.IsOut))
-            {
-                for (int i = 0; i < methodParameters.Length; i++)
-                {
-                    if (methodParameters[i].IsOut)
-                    {
-                        localResults.Add($"out_{methodParameters[i].Name}", args[i]);
-                    }
-                }
-            }
-            #endregion
-
-            AddToStubValues($"{methodMetadata.Name}___{index}", localResults);
-            //TODO: below can be split as well
-            // every time object is rewritten entirely. couldn't find better solution. maybe i can try to add middleware so we can flush the file once request ends.
-            var stringified = JsonConvert.SerializeObject(StubValues,
-                new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                    Formatting = Formatting.Indented
-                });
-            using (var stream = new FileStream(StubFileName, FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
-            {
-                var bytes = Encoding.UTF8.GetBytes(stringified);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-
-            AllTheWayUp();
-        }
-
-        private static void AllTheWayUp()
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (var item in MethodSignatures)
-            {
-                sb.AppendLine(item.Value.GetSnippet());
-                sb.AppendLine();
-            }
-            using (var stream = new FileStream(CodeFileName, FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
-            {
-                var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            var outputManager = ServiceLocator.GetService<IOutputManager>();
+            var localResults = outputManager.ProcessResult(methodMetadata, args, result);
+            outputManager.AddToStubValues($"{methodMetadata.Name}___{index}", localResults);
+            outputManager.OutputStubs();
+            outputManager.OutputSnippets();
         }
     }
 }
