@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace StubberProject.Models
+﻿namespace StubberProject.Models
 {
     public class StubberOption
     {

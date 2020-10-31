@@ -9,20 +9,21 @@ namespace StubberProject.Attributes
 {
     [Aspect(Scope.Global)]
 #if DEBUG
-    [Injection(typeof(StubberAttribute))]
+    [Injection(typeof(StubberTargetAttribute))]
 #endif
-    public sealed class StubberAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    public sealed class StubberTargetAttribute : Attribute
     {
         // below approach is being used
         // https://github.com/pamidur/aspect-injector/issues/77#issuecomment-443518810
         // If there are any problems with async methods(deadlock etc) author suggessted below example too.
         // https://github.com/pamidur/aspect-injector/blob/master/samples/UniversalWrapper/UniversalWrapper.cs
 
-        private static MethodInfo _asyncTimezoneConverter = typeof(StubberAttribute).GetMethod(nameof(WrapAsync), BindingFlags.NonPublic | BindingFlags.Static);
-        private static MethodInfo _syncTimezoneConverter = typeof(StubberAttribute).GetMethod(nameof(WrapSync), BindingFlags.NonPublic | BindingFlags.Static);
+        private static MethodInfo _asyncTimezoneConverter = typeof(StubberTargetAttribute).GetMethod(nameof(WrapAsync), BindingFlags.NonPublic | BindingFlags.Static);
+        private static MethodInfo _syncTimezoneConverter = typeof(StubberTargetAttribute).GetMethod(nameof(WrapSync), BindingFlags.NonPublic | BindingFlags.Static);
 
         [Advice(Kind.Around, Targets = Target.Method)]
-        public object Stubber(
+        public object StubberTarget(
             [Argument(Source.Target)] Func<object[], object> target,
             [Argument(Source.Arguments)] object[] args,
             [Argument(Source.ReturnType)] Type retType,
@@ -45,10 +46,8 @@ namespace StubberProject.Attributes
             }
         }
 
-        private static int IndexCounter = 0; // methods with same name can be called multiple times. this index helps with that.
-
         /// <summary>
-        /// Calls methods before and after service method call for sync methods
+        /// Calls methods before and after method call for sync methods
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
@@ -57,15 +56,14 @@ namespace StubberProject.Attributes
         /// <returns></returns>
         private static T WrapSync<T>(Func<object[], object> target, object[] args, MethodBase methodMetadata)
         {
-            var localIndex = ++IndexCounter; // this needs to be copied to another variable, so same index does not get carried over
-            BeforeExecution(methodMetadata, args, localIndex);
+            BeforeExecution(methodMetadata, args);
             var result = (T)target(args);
-            AfterExecution(methodMetadata, args, result, localIndex);
+            AfterExecution(methodMetadata, args, result);
             return result;
         }
 
         /// <summary>
-        /// Calls methods before and after service method call for async methods
+        /// Calls methods before and after method call for async methods
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="target"></param>
@@ -74,26 +72,26 @@ namespace StubberProject.Attributes
         /// <returns></returns>
         private static async Task<T> WrapAsync<T>(Func<object[], object> target, object[] args, MethodBase methodMetadata)
         {
-            var localIndex = ++IndexCounter; // this needs to be copied to another variable, so same index does not get carried over
-            BeforeExecution(methodMetadata, args, localIndex);
+            BeforeExecution(methodMetadata, args);
             var result = await (Task<T>)target(args);
-            AfterExecution(methodMetadata, args, result, localIndex);
+            AfterExecution(methodMetadata, args, result);
             return result;
         }
 
-        private static void BeforeExecution(MethodBase methodMetadata, object[] args, int index)
+        private static void BeforeExecution(MethodBase methodMetadata, object[] args)
         {
             var manager = ServiceLocator.GetService<IStubberManager>();
+            manager.StartRecording(methodMetadata.Name);
             var arguments = manager.ProcessArguments(methodMetadata, args);
-            manager.AddToStubValues($"{methodMetadata.Name}___{index}", arguments);
-            manager.AddToMethodSignatures($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
+            manager.AddToStubValues("Target", arguments);
         }
 
-        private static void AfterExecution(MethodBase methodMetadata, object[] args, object result, int index)
+        private static void AfterExecution(MethodBase methodMetadata, object[] args, object result)
         {
             var manager = ServiceLocator.GetService<IStubberManager>();
             var localResults = manager.ProcessResult(methodMetadata, args, result);
-            manager.AddToStubValues($"{methodMetadata.Name}___{index}", localResults);
+            manager.AddToStubValues($"Target", localResults);
+            manager.StopRecording();
         }
     }
 }

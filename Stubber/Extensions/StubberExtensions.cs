@@ -2,9 +2,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using StubberProject.Helpers;
 using StubberProject.Models;
 
-namespace StubberProject.Helpers
+namespace StubberProject.Extensions
 {
     public static class StubberExtensions
     {
@@ -13,7 +14,7 @@ namespace StubberProject.Helpers
             //services.Configure<StubberOption>(x => configuration.GetSection("StubberConfig").Bind(x));
             services.AddSingleton<IProcessor, DefaultProcessor>();
             services.AddSingleton<IOutputter, DefaultOutputter>();
-            services.AddSingleton<IOutputManager, OutputManager>();
+            services.AddSingleton<IStubberManager, StubberManager>();
         }
 
         public static void UseStubber(this IApplicationBuilder app)
@@ -25,7 +26,7 @@ namespace StubberProject.Helpers
 
             ServiceLocator.RegisterService(services.GetService<IProcessor>());
             ServiceLocator.RegisterService(services.GetService<IOutputter>());
-            ServiceLocator.RegisterService(services.GetService<IOutputManager>());
+            ServiceLocator.RegisterService(services.GetService<IStubberManager>());
         }
     }
 }

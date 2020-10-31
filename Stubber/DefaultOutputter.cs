@@ -16,18 +16,18 @@ namespace StubberProject
             _config = options.Value;
         }
 
-        private string GetStubFullPath(string methodName)
+        private string GetStubFullPath(string outputName)
         {
-            return "STUB_SOURCE.json";
-            return $"{_config.StubFilePathPrefix}/{methodName}.json";
+            return $"{outputName}.json";
+            return $"{_config.StubFilePathPrefix}/{outputName}.json";
         }
-        private string GetCodeFullPath(string methodName)
+        private string GetCodeFullPath(string outputName)
         {
-            return "CODE.txt";
-            return $"{_config.CodeFilePathPrefix}/{methodName}.txt";
+            return $"{outputName}.txt";
+            return $"{_config.CodeFilePathPrefix}/{outputName}.txt";
         }
 
-        public async Task OutputStubs(string methodName, Dictionary<string, Dictionary<string, object>> StubValues)
+        public async Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> StubValues)
         {
             var stringified = JsonConvert.SerializeObject(StubValues,
                 new JsonSerializerSettings
@@ -35,14 +35,14 @@ namespace StubberProject
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                     Formatting = Formatting.Indented
                 });
-            using (var stream = new FileStream(GetStubFullPath(methodName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+            using (var stream = new FileStream(GetStubFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {
                 var bytes = Encoding.UTF8.GetBytes(stringified);
                 stream.Write(bytes, 0, bytes.Length);
             }
         }
 
-        public async Task OutputSnippets(string methodName, Dictionary<string, StubSnippet> SnippetValues)
+        public async Task OutputSnippets(string outputName, Dictionary<string, StubSnippet> SnippetValues)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in SnippetValues)
@@ -50,7 +50,7 @@ namespace StubberProject
                 sb.AppendLine(item.Value.GetSnippet());
                 sb.AppendLine();
             }
-            using (var stream = new FileStream(GetCodeFullPath(methodName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+            using (var stream = new FileStream(GetCodeFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {
                 var bytes = Encoding.UTF8.GetBytes(sb.ToString());
                 stream.Write(bytes, 0, bytes.Length);

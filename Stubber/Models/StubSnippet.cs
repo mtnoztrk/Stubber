@@ -36,7 +36,7 @@ namespace StubberProject.Models
             var outLines =  $"{lineTabs}{string.Join(";" + Environment.NewLine + lineTabs, OutParameterDefinitions)}";
             var methodSignature =  $"{Environment.NewLine}{paramTabs}{string.Join("," + Environment.NewLine + paramTabs, MethodParameters)}";
             return $"{outLines}" +
-                $"{Environment.NewLine}{lineTabs}_discountServiceMock" +
+                $"{Environment.NewLine}{lineTabs}_discountServiceMock" + //TODO: burayı fixle
                 $"{Environment.NewLine}{methodTabs}.Setup(c => c.{MethodName}({methodSignature}))" +
                 $"{Environment.NewLine}{methodTabs}.Returns({ReturnSignature});";
         }

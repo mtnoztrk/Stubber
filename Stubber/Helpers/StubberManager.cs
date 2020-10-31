@@ -1,44 +1,47 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using StubberProject.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using StubberProject.Attributes;
 
 namespace StubberProject.Helpers
 {
-    interface IOutputManager : IProcessor
+    /// <summary>
+    /// Coordinates <see cref="StubberAttribute"/> and <see cref="StubberTargetAttribute"/>.
+    /// </summary>
+    interface IStubberManager : IProcessor
     {
         bool IsRecording { get; set; }
         void StartRecording(string methodUnderTest);
         void StopRecording();
         void AddToStubValues(string methodName, Dictionary<string, object> localResults);
         void AddToMethodSignatures(string methodName, StubSnippet snippet);
-        void OutputStubs();
-        void OutputSnippets();
     }
 
-    internal class OutputManager : IOutputManager
+    /// <summary>
+    /// Coordinates <see cref="StubberAttribute"/> and <see cref="StubberTargetAttribute"/>.
+    /// </summary>
+    internal class StubberManager : IStubberManager
     {
         private readonly IProcessor _processor;
         private readonly IOutputter _outputter;
-        private string _outputFileName { get; set; }
+        private string _outputName { get; set; }
         private StubberOption _config { get; set; }
         public bool IsRecording { get; set; }
 
 
         /// <summary>
-        /// used for printing values used in Moq methods
+        /// used for printing values that are used in Moq methods
         /// </summary>
-        internal Dictionary<string, Dictionary<string, object>> StubValues = new Dictionary<string, Dictionary<string, object>>();
+        private Dictionary<string, Dictionary<string, object>> _stubValues = new Dictionary<string, Dictionary<string, object>>();
         /// <summary>
         /// used for printing methods for Moq
         /// </summary>
-        internal Dictionary<string, StubSnippet> SnippetValues = new Dictionary<string, StubSnippet>();
+        private Dictionary<string, StubSnippet> _snippetValues = new Dictionary<string, StubSnippet>();
 
-        public OutputManager(IOptions<StubberOption> options, IProcessor processor, IOutputter outputter)
+        public StubberManager(IOptions<StubberOption> options, IProcessor processor, IOutputter outputter)
         {
             _config = options.Value;
             IsRecording = false;
@@ -48,13 +51,19 @@ namespace StubberProject.Helpers
 
         public void StartRecording(string methodUnderTest)
         {
-            _outputFileName = $"{methodUnderTest}_{DateTime.Now}";
+            if (IsRecording)
+                throw new InvalidOperationException("You are trying to test two methods at once please dont :(");
+            _outputName = $"{methodUnderTest}_{DateTime.Now.ToString("dd_MMM_HH_mm")}";
+            _stubValues.Clear();
+            _snippetValues.Clear();
             IsRecording = true;
         }
 
         public void StopRecording()
         {
             IsRecording = false;
+            _outputter.OutputStubs(_outputName, _stubValues);
+            _outputter.OutputSnippets(_outputName, _snippetValues);
         }
 
         public Dictionary<string, object> ProcessArguments(MethodBase methodMetadata, object[] args)
@@ -69,31 +78,21 @@ namespace StubberProject.Helpers
 
         public void AddToStubValues(string methodName, Dictionary<string, object> results)
         {
-            if (StubValues.ContainsKey(methodName))
+            if (_stubValues.ContainsKey(methodName))
             {
                 // might throw eksepsiyon :(
-                var combinedDictionary = StubValues[methodName].Union(results).ToDictionary(k => k.Key, v => v.Value);
-                StubValues[methodName] = combinedDictionary;
+                var combinedDictionary = _stubValues[methodName].Union(results).ToDictionary(k => k.Key, v => v.Value);
+                _stubValues[methodName] = combinedDictionary;
             }
             else
             {
-                StubValues.Add(methodName, results);
+                _stubValues.Add(methodName, results);
             }
         }
 
         public void AddToMethodSignatures(string methodName, StubSnippet snippet)
         {
-            SnippetValues.Add(methodName, snippet);
-        }
-
-        public void OutputStubs()
-        {
-            _outputter.OutputStubs(_outputFileName, StubValues);
-        }
-
-        public void OutputSnippets()
-        {
-            _outputter.OutputSnippets(_outputFileName, SnippetValues);
+            _snippetValues.Add(methodName, snippet);
         }
     }
 }

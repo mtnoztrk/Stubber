@@ -6,7 +6,7 @@ namespace StubberProject.Helpers
     /// <summary>
     /// Only for <seealso cref="StubberAttribute"/> usage. AspectInjector library can not use normal dependency injection.
     /// </summary>
-    public static class ServiceLocator
+    internal static class ServiceLocator
     {
         private static readonly Dictionary<Type, object> registeredServices = new Dictionary<Type, object>();
 

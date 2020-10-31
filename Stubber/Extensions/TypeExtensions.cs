@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 
-namespace StubberProject.Helpers
+namespace StubberProject.Extensions
 {
     public static class TypeExtensions
     {
