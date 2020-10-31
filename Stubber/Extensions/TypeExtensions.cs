@@ -33,7 +33,7 @@ namespace StubberProject.Extensions
                 .Select(ii => aType.GetInterfaceMap(ii));
         }
 
-        public static Type[] GetInterfacesForMethod(this MethodInfo mi)
+        public static Type[] GetInterfacesForMethod(this MethodInfo mi) // special thanks https://stackoverflow.com/a/50108844/8616482
         {
             return mi.ReflectedType
                 .GetAllInterfaceMaps()

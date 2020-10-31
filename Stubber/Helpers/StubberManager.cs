@@ -17,7 +17,7 @@ namespace StubberProject.Helpers
         void StartRecording(string methodUnderTest);
         void StopRecording();
         void AddToStubValues(string methodName, Dictionary<string, object> localResults);
-        void AddToSnippetValues(string methodName, StubSnippet snippet);
+        void AddToSnippetValues(string methodName, string snippet);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace StubberProject.Helpers
         /// <summary>
         /// used for printing methods for Moq
         /// </summary>
-        private Dictionary<string, StubSnippet> _snippetValues = new Dictionary<string, StubSnippet>();
+        private Dictionary<string, string> _snippetValues = new Dictionary<string, string>();
 
         public StubberManager(IOptions<StubberOption> options, IProcessor processor, IOutputter outputter)
         {
@@ -53,7 +53,7 @@ namespace StubberProject.Helpers
         {
             if (IsRecording)
                 throw new InvalidOperationException("You are trying to test two methods at once please dont :(");
-            _outputName = $"{methodUnderTest}_{DateTime.Now.ToString("dd_MMM_HH_mm")}";
+            _outputName = $"{methodUnderTest}_{DateTime.Now.ToString("dd_MMM_HH_mm_ss")}";
             _stubValues.Clear();
             _snippetValues.Clear();
             IsRecording = true;
@@ -76,6 +76,11 @@ namespace StubberProject.Helpers
             return _processor.ProcessResult(methodMetadata, args, result);
         }
 
+        public string ProcessSnippet(MethodBase methodMetadata, string jsonAccessor)
+        {
+            return _processor.ProcessSnippet(methodMetadata, jsonAccessor);
+        }
+
         public void AddToStubValues(string methodName, Dictionary<string, object> results)
         {
             if (_stubValues.ContainsKey(methodName))
@@ -90,7 +95,7 @@ namespace StubberProject.Helpers
             }
         }
 
-        public void AddToSnippetValues(string methodName, StubSnippet snippet)
+        public void AddToSnippetValues(string methodName, string snippet)
         {
             _snippetValues.Add(methodName, snippet);
         }

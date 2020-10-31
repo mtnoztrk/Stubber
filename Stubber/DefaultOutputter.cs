@@ -18,18 +18,22 @@ namespace StubberProject
 
         private string GetStubFullPath(string outputName)
         {
-            return $"{outputName}.json";
-            return $"{_config.StubFilePathPrefix}/{outputName}.json";
+            var path = $"{outputName}.json";
+            if(!string.IsNullOrEmpty(_config.StubFilePathPrefix))
+                path = Path.Combine(_config.StubFilePathPrefix, path);
+            return path;
         }
         private string GetCodeFullPath(string outputName)
         {
-            return $"{outputName}.txt";
-            return $"{_config.CodeFilePathPrefix}/{outputName}.txt";
+            var path = $"{outputName}.txt";
+            if (!string.IsNullOrEmpty(_config.CodeFilePathPrefix))
+                path = Path.Combine(_config.CodeFilePathPrefix, path);
+            return path;
         }
 
-        public async Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> StubValues)
+        public async Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> stubValues)
         {
-            var stringified = JsonConvert.SerializeObject(StubValues,
+            var stringified = JsonConvert.SerializeObject(stubValues,
                 new JsonSerializerSettings
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
@@ -42,12 +46,12 @@ namespace StubberProject
             }
         }
 
-        public async Task OutputSnippets(string outputName, Dictionary<string, StubSnippet> SnippetValues)
+        public async Task OutputSnippets(string outputName, Dictionary<string, string> snippetValues)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var item in SnippetValues)
+            foreach (var item in snippetValues)
             {
-                sb.AppendLine(item.Value.GetSnippet());
+                sb.AppendLine(item.Value);
             }
             using (var stream = new FileStream(GetCodeFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {

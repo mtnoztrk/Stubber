@@ -86,9 +86,9 @@ namespace StubberProject.Attributes
             var manager = ServiceLocator.GetService<IStubberManager>();
             if (!manager.IsRecording) // don't save anything if recording is not enabled
                 return;
-            var arguments = manager.ProcessArguments(methodMetadata, args);
-            manager.AddToStubValues($"{methodMetadata.Name}___{index}", arguments);
-            manager.AddToSnippetValues($"{methodMetadata.Name}___{index}", new StubSnippet(methodMetadata, index));
+            var jsonAccessor = $"{methodMetadata.Name}___{index}";
+            manager.AddToStubValues(jsonAccessor, manager.ProcessArguments(methodMetadata, args));
+            manager.AddToSnippetValues(jsonAccessor, manager.ProcessSnippet(methodMetadata, jsonAccessor));
         }
 
         private static void AfterExecution(MethodBase methodMetadata, object[] args, object result, int index)
@@ -96,8 +96,7 @@ namespace StubberProject.Attributes
             var manager = ServiceLocator.GetService<IStubberManager>();
             if (!manager.IsRecording) // don't save anything if recording is not enabled
                 return;
-            var localResults = manager.ProcessResult(methodMetadata, args, result);
-            manager.AddToStubValues($"{methodMetadata.Name}___{index}", localResults);
+            manager.AddToStubValues($"{methodMetadata.Name}___{index}", manager.ProcessResult(methodMetadata, args, result));
         }
     }
 }

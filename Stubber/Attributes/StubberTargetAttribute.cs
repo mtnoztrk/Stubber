@@ -1,12 +1,14 @@
 ﻿using AspectInjector.Broker;
 using StubberProject.Helpers;
-using StubberProject.Models;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace StubberProject.Attributes
 {
+    /// <summary>
+    /// Marks the target method is being recorded for stub generation.
+    /// </summary>
     [Aspect(Scope.Global)]
 #if DEBUG
     [Injection(typeof(StubberTargetAttribute))]
