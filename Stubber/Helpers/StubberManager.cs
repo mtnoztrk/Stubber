@@ -17,7 +17,7 @@ namespace StubberProject.Helpers
         void StartRecording(string methodUnderTest);
         void StopRecording();
         void AddToStubValues(string methodName, Dictionary<string, object> localResults);
-        void AddToSnippetValues(string methodName, string snippet);
+        void AddToSnippetValues(string snippet);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace StubberProject.Helpers
         /// <summary>
         /// used for printing methods for Moq
         /// </summary>
-        private Dictionary<string, string> _snippetValues = new Dictionary<string, string>();
+        private List<string> _snippetValues = new List<string>();
 
         public StubberManager(IOptions<StubberOption> options, IProcessor processor, IOutputter outputter)
         {
@@ -81,6 +81,11 @@ namespace StubberProject.Helpers
             return _processor.ProcessSnippet(methodMetadata, jsonAccessor);
         }
 
+        public string GenerateMethodEntry(MethodBase methodBase, string jsonAccessor, string outputName = null)
+        {
+            return _processor.GenerateMethodEntry(methodBase, jsonAccessor, _outputName);
+        }
+
         public void AddToStubValues(string methodName, Dictionary<string, object> results)
         {
             if (_stubValues.ContainsKey(methodName))
@@ -95,9 +100,9 @@ namespace StubberProject.Helpers
             }
         }
 
-        public void AddToSnippetValues(string methodName, string snippet)
+        public void AddToSnippetValues(string snippet)
         {
-            _snippetValues.Add(methodName, snippet);
+            _snippetValues.Add(snippet);
         }
     }
 }

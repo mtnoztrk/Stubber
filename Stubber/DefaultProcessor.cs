@@ -1,7 +1,10 @@
 ﻿using AgileObjects.ReadableExpressions;
 using Microsoft.CSharp;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using StubberProject.Extensions;
+using StubberProject.Helpers;
+using StubberProject.Models;
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -20,10 +23,12 @@ namespace StubberProject
         private readonly string _outPrefix = "out_";
         private readonly string _sourceVariableName = "source";
         private readonly IMemoryCache _cache;
+        private readonly StubberOption _config;
 
-        public DefaultProcessor(IMemoryCache cache)
+        public DefaultProcessor(IMemoryCache cache, IOptions<StubberOption> options)
         {
             _cache = cache;
+            _config = options.Value;
         }
 
         public Dictionary<string, object> ProcessArguments(MethodBase methodMetadata, object[] args)
@@ -78,7 +83,7 @@ namespace StubberProject
             if (string.IsNullOrEmpty(InterfaceName)) return null; // if there is no interface found, this can't be stubbed!
 
             //TODO: namespaceleri confige bagla
-            var methodParameters = GenerateMethodParameters(methodBase, jsonAccessor); // parameters used for calling subbed method.
+            var methodParameters = GenerateMethodParameters(methodBase, jsonAccessor); // parameters used for calling stubbed method.
             var outParameterDefinitions = GenerateOutParameterDefinitions(methodBase, jsonAccessor); // out variables can not be used directly, first we need to define variable and call it from stubbed method.
             var returnSignature = GeneateReturnSignature(methodBase, jsonAccessor);
 
@@ -92,6 +97,19 @@ namespace StubberProject
                 $"{Environment.NewLine}{lineTabs}_{InterfaceName}Mock" +
                 $"{Environment.NewLine}{methodTabs}.Setup(c => c.{methodBase.Name}({methodSignature}))" +
                 $"{Environment.NewLine}{methodTabs}.Returns({returnSignature});";
+        }
+
+        public string GenerateMethodEntry(MethodBase methodBase, string jsonAccessor, string outputName = null)
+        {
+            var methodParameters = GenerateEntryMethodParameters(methodBase, jsonAccessor);
+            using (var escapedFilePath = new StringWriter())
+            {
+                var prov = new CSharpCodeProvider(); //TODO: move it to class and make it instantiate once.
+                prov.GenerateCodeFromExpression(new CodePrimitiveExpression(DefaultOutputter.GetStubFullPath(_config, outputName)), escapedFilePath, null);
+                var lines = $"\tvar {_sourceVariableName} = new {nameof(SourceObject)}({escapedFilePath});{methodParameters}";
+
+                return lines;
+            }
         }
 
         #region HelperMethods
@@ -168,6 +186,17 @@ namespace StubberProject
             {
                 return $"var {c.Name} = {_sourceVariableName}.Get<{GetParameterInfoAsValidCode(c)}>(\"{jsonAccessor}\", \"{_outPrefix}{c.Name}\");";
             });
+        }
+
+        private string GenerateEntryMethodParameters(MethodBase methodBase, string jsonAccessor)
+        {
+            var methodParameters = methodBase.GetParameters().Where(c => !c.IsOut).Select(c =>
+            {
+                return c.IsOut ?
+                    $"{GetParameterInfoAsValidCode(c)} {c.Name};" :
+                    $"var {c.Name} = {_sourceVariableName}.Get<{GetParameterInfoAsValidCode(c)}>(\"{jsonAccessor}\", \"{_inPrefix}{c.Name}\");";
+            });
+            return $"{Environment.NewLine}\t{string.Join(Environment.NewLine + "\t", methodParameters)}";
         }
         #endregion
     }

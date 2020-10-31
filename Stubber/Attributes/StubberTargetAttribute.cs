@@ -86,6 +86,7 @@ namespace StubberProject.Attributes
             manager.StartRecording(methodMetadata.Name);
             var arguments = manager.ProcessArguments(methodMetadata, args);
             manager.AddToStubValues("Target", arguments);
+            manager.AddToSnippetValues(manager.GenerateMethodEntry(methodMetadata, "Target"));
         }
 
         private static void AfterExecution(MethodBase methodMetadata, object[] args, object result)

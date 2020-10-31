@@ -88,7 +88,7 @@ namespace StubberProject.Attributes
                 return;
             var jsonAccessor = $"{methodMetadata.Name}___{index}";
             manager.AddToStubValues(jsonAccessor, manager.ProcessArguments(methodMetadata, args));
-            manager.AddToSnippetValues(jsonAccessor, manager.ProcessSnippet(methodMetadata, jsonAccessor));
+            manager.AddToSnippetValues(manager.ProcessSnippet(methodMetadata, jsonAccessor));
         }
 
         private static void AfterExecution(MethodBase methodMetadata, object[] args, object result, int index)

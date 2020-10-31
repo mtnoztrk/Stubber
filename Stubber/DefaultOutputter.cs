@@ -10,24 +10,24 @@ namespace StubberProject
 {
     public class DefaultOutputter : IOutputter
     {
-        private StubberOption _config { get; set; }
+        private readonly StubberOption _config;
         public DefaultOutputter(IOptions<StubberOption> options)
         {
             _config = options.Value;
         }
 
-        private string GetStubFullPath(string outputName)
+        public static string GetStubFullPath(StubberOption config, string outputName)
         {
             var path = $"{outputName}.json";
-            if(!string.IsNullOrEmpty(_config.StubFilePathPrefix))
-                path = Path.Combine(_config.StubFilePathPrefix, path);
+            if(!string.IsNullOrEmpty(config.StubFilePathPrefix))
+                path = Path.Combine(config.StubFilePathPrefix, path);
             return path;
         }
-        private string GetCodeFullPath(string outputName)
+        public static string GetCodeFullPath(StubberOption config, string outputName)
         {
             var path = $"{outputName}.txt";
-            if (!string.IsNullOrEmpty(_config.CodeFilePathPrefix))
-                path = Path.Combine(_config.CodeFilePathPrefix, path);
+            if (!string.IsNullOrEmpty(config.CodeFilePathPrefix))
+                path = Path.Combine(config.CodeFilePathPrefix, path);
             return path;
         }
 
@@ -39,21 +39,21 @@ namespace StubberProject
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                     Formatting = Formatting.Indented
                 });
-            using (var stream = new FileStream(GetStubFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+            using (var stream = new FileStream(GetStubFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {
                 var bytes = Encoding.UTF8.GetBytes(stringified);
                 stream.Write(bytes, 0, bytes.Length);
             }
         }
 
-        public async Task OutputSnippets(string outputName, Dictionary<string, string> snippetValues)
+        public async Task OutputSnippets(string outputName, List<string> snippetValues)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in snippetValues)
             {
-                sb.AppendLine(item.Value);
+                sb.AppendLine(item);
             }
-            using (var stream = new FileStream(GetCodeFullPath(outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+            using (var stream = new FileStream(GetCodeFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {
                 var bytes = Encoding.UTF8.GetBytes(sb.ToString());
                 stream.Write(bytes, 0, bytes.Length);
