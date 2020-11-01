@@ -4,6 +4,9 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AssemblyName>Stubber</AssemblyName>
     <RootNamespace>StubberProject</RootNamespace>
+    <PackageId>Stubber</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Metin Ozturk</Authors>
   </PropertyGroup>
 
   <ItemGroup>
