@@ -74,7 +74,7 @@ public class BlogService : IBlogService
     }
 }
 ```
-# Lisense
+# License
 MIT License
 
 Copyright (c) 2020 Metin ÖZTÜRK
