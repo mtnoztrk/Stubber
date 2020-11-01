@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using StubberProject.Helpers;
 using StubberProject.Models;
 using System.Collections.Generic;
 using System.IO;
@@ -33,16 +34,25 @@ namespace StubberProject
 
         public async Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> stubValues)
         {
-            var stringified = JsonConvert.SerializeObject(stubValues,
-                new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                    Formatting = Formatting.Indented
-                });
-            using (var stream = new FileStream(GetStubFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+            try
             {
-                var bytes = Encoding.UTF8.GetBytes(stringified);
-                stream.Write(bytes, 0, bytes.Length);
+                var stringified = JsonConvert.SerializeObject(stubValues,
+                        new JsonSerializerSettings
+                        {
+                            NullValueHandling = NullValueHandling.Ignore,
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                            Formatting = Formatting.Indented
+                        });
+                using (var stream = new FileStream(GetStubFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
+                {
+                    var bytes = Encoding.UTF8.GetBytes(stringified);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+            }
+            catch (System.Exception ex)
+            {
+
+                throw;
             }
         }
 
