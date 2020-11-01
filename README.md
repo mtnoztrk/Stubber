@@ -5,6 +5,10 @@ Writing tests for complex methods takes a lot of time especially the project has
 # Installation
 Stubber is activated only in DEBUG mode. Using Stubber should not affect performance in production environment. 
 
+Available on [NuGet](https://www.nuget.org/packages/Stubber/)
+
+	PM> Install-Package Stubber
+
 `appsettings.json`
 ```json
 {
