@@ -21,7 +21,7 @@ namespace StubberProject.Attributes
         private static MethodInfo _asyncTimezoneConverter = typeof(StubberAttribute).GetMethod(nameof(WrapAsync), BindingFlags.NonPublic | BindingFlags.Static);
         private static MethodInfo _syncTimezoneConverter = typeof(StubberAttribute).GetMethod(nameof(WrapSync), BindingFlags.NonPublic | BindingFlags.Static);
 
-        [Advice(Kind.Around, Targets = Target.Method)]
+        [Advice(Kind.Around, Targets = Target.Public)]
         public object Stubber(
             [Argument(Source.Target)] Func<object[], object> target,
             [Argument(Source.Arguments)] object[] args,

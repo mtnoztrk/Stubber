@@ -20,7 +20,7 @@ namespace StubberProject
         public static string GetStubFullPath(StubberOption config, string outputName)
         {
             var path = $"{outputName}.json";
-            if(!string.IsNullOrEmpty(config.StubFilePathPrefix))
+            if (!string.IsNullOrEmpty(config.StubFilePathPrefix))
                 path = Path.Combine(config.StubFilePathPrefix, path);
             return path;
         }
@@ -34,25 +34,11 @@ namespace StubberProject
 
         public async Task OutputStubs(string outputName, Dictionary<string, Dictionary<string, object>> stubValues)
         {
-            try
+            var stringified = JsonConvert.SerializeObject(stubValues, NewtonsoftHelper.Settings);
+            using (var stream = new FileStream(GetStubFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
             {
-                var stringified = JsonConvert.SerializeObject(stubValues,
-                        new JsonSerializerSettings
-                        {
-                            NullValueHandling = NullValueHandling.Ignore,
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                            Formatting = Formatting.Indented
-                        });
-                using (var stream = new FileStream(GetStubFullPath(_config, outputName), FileMode.Create, FileAccess.Write, FileShare.Write, 4096))
-                {
-                    var bytes = Encoding.UTF8.GetBytes(stringified);
-                    stream.Write(bytes, 0, bytes.Length);
-                }
-            }
-            catch (System.Exception ex)
-            {
-
-                throw;
+                var bytes = Encoding.UTF8.GetBytes(stringified);
+                stream.Write(bytes, 0, bytes.Length);
             }
         }
 

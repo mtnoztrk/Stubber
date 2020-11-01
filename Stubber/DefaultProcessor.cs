@@ -83,19 +83,20 @@ namespace StubberProject
             if (string.IsNullOrEmpty(InterfaceName)) return null; // if there is no interface found, this can't be stubbed!
 
             //TODO: namespaceleri confige bagla
-            var methodParameters = GenerateMethodParameters(methodBase, jsonAccessor); // parameters used for calling stubbed method.
             var outParameterDefinitions = GenerateOutParameterDefinitions(methodBase, jsonAccessor); // out variables can not be used directly, first we need to define variable and call it from stubbed method.
             var returnSignature = GeneateReturnSignature(methodBase, jsonAccessor);
-
+            
             var lineTabs = "\t";
             var methodTabs = "\t\t";
             var paramTabs = "\t\t\t";
-
+            var callingHandle = GenerateCallingHandle(methodBase, jsonAccessor, paramTabs);
             var outLines = $"{lineTabs}{string.Join(";" + Environment.NewLine + lineTabs, outParameterDefinitions)}";
-            var methodSignature = $"{Environment.NewLine}{paramTabs}{string.Join("," + Environment.NewLine + paramTabs, methodParameters)}";
+            var methodName = methodBase.Name;
+            if (methodBase.Attributes.HasFlag(MethodAttributes.SpecialName))
+                methodName = methodName.Replace("get_", "");
             return $"{outLines}" +
                 $"{Environment.NewLine}{lineTabs}_{InterfaceName}Mock" +
-                $"{Environment.NewLine}{methodTabs}.Setup(c => c.{methodBase.Name}({methodSignature}))" +
+                $"{Environment.NewLine}{methodTabs}.Setup(c => c.{methodName}{callingHandle})" +
                 $"{Environment.NewLine}{methodTabs}.Returns({returnSignature});";
         }
 
@@ -170,14 +171,27 @@ namespace StubberProject
             }
         }
 
-        private IEnumerable<string> GenerateMethodParameters(MethodBase methodBase, string jsonAccessor)
+        private string GenerateCallingHandle(MethodBase methodBase, string jsonAccessor, string paramTabs)
         {
-            return methodBase.GetParameters().Select(c =>
+            if (methodBase.Attributes.HasFlag(MethodAttributes.SpecialName))
+                return "";
+            var methodParameters = methodBase.GetParameters().Select(c =>
             {
-                return c.IsOut ?
-                    $"out {c.Name}" :
-                    $"{_sourceVariableName}.Get<{GetParameterInfoAsValidCode(c)}>(\"{jsonAccessor}\", \"{_inPrefix}{c.Name}\")";
+                if (c.IsOut) return $"out {c.Name}";
+                //TODO: if class use GetM
+                Type parameterType = (c.IsOut || c.ParameterType.IsByRef) ? c.ParameterType.GetElementType() : c.ParameterType;
+                if (parameterType.GetProperties().Count() == 2 && parameterType.GetProperties()[0].Name.Equals("HasValue"))
+                {
+                    parameterType = parameterType.GetProperties()[1].PropertyType;
+                }
+                if(parameterType.IsValueType) return $"{_sourceVariableName}.Get<{GetParameterInfoAsValidCode(c)}>(\"{jsonAccessor}\", \"{_inPrefix}{c.Name}\")";
+                return $"{_sourceVariableName}.Matcher<{GetParameterInfoAsValidCode(c)}>(\"{jsonAccessor}\", \"{_inPrefix}{c.Name}\")";
             });
+
+            var methodSignature = $"{string.Join("," + Environment.NewLine + paramTabs, methodParameters)}";
+            if (methodParameters.Any()) // if there are any parameters
+                methodSignature = $"{Environment.NewLine}{paramTabs}{methodSignature}";
+            return $"({methodSignature})";
         }
 
         private IEnumerable<string> GenerateOutParameterDefinitions(MethodBase methodBase, string jsonAccessor)

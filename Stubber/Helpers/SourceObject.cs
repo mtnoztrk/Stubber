@@ -24,22 +24,13 @@ namespace StubberProject.Helpers
             return property.ToObject<T>();
         }
 
-        public T TryMe<T>(string dictKey, string propertyKey)
+        public T Matcher<T>(string dictKey, string propertyKey)
         {
-            // TODO: bu ne oglum fixle ya
             return Match.Create<T>((o) =>
             {
                 var property = stubs.SelectToken(dictKey).SelectToken(propertyKey);
-                if (typeof(T).IsList())
-                    return property.ToString() == JsonConvert.SerializeObject(o, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                        Formatting = Formatting.Indented
-
-                    });
-                else
-                    return JsonConvert.SerializeObject(property.ToObject<T>()) == JsonConvert.SerializeObject(o);
+                var result = property.ToString() == JsonConvert.SerializeObject(o, NewtonsoftHelper.Settings);
+                return result;
             });
         }
     }
