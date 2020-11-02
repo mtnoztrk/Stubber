@@ -3,7 +3,7 @@ Helper library for writing WebAPI tests while mocking DB calls etc. Captures req
 # Motivation
 Writing tests for complex methods takes a lot of time especially the project has no prior tests. **Stubber** automatically generates some code to jump start testing.
 # Installation
-Stubber is activated only in DEBUG mode. Using Stubber should not affect performance in production environment. 
+Stubber is activated only in DEBUG mode. Using **Stubber** should not affect performance in production environment. 
 
 Available on [NuGet](https://www.nuget.org/packages/Stubber/)
 
@@ -12,10 +12,11 @@ Available on [NuGet](https://www.nuget.org/packages/Stubber/)
 `appsettings.json`
 ```json
 {
-  "Stubber": {
-    "CodeFilePathPrefix": "C:\\ProjectPath\\Tests\\Documents", 
-    "StubFilePathPrefix": "C:\\ProjectPath\\Tests\\DataSources"
-  }
+    ...
+    "Stubber": {
+        "CodeFilePathPrefix": "C:\\ProjectPath\\Tests\\Documents", 
+        "StubFilePathPrefix": "C:\\ProjectPath\\Tests\\DataSources"
+    }
 }
 ```
 `Startup.cs`
@@ -34,7 +35,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services) 
     {
         ...
-        service.UseStubber(Configuration);
+        services.UseStubber(Configuration);
         ...
     }
     
